@@ -12,7 +12,11 @@ app.use(cors({
     methods: ['GET', 'POST'], // Allow only these methods
     allowedHeaders: ['Content-Type'], // Allow only specific headers
 }));
-
+app.get('/',(req,res)=>{
+    res.send({
+        message:"success"
+    })
+})
 // Routes
 app.post('/bfhl', (req, res) => {
     // Your logic for POST request
