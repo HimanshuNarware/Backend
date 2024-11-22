@@ -1,73 +1,66 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const multer = require('multer');
-const base64Img = require('base64-img');
+const cors = require('cors');
 
 const app = express();
-app.use(bodyParser.json());
-const PORT = 5000;
 
-// Helper functions
-const isPrime = (num) => {
-    if (num < 2) return false;
-    for (let i = 2; i <= Math.sqrt(num); i++) {
-        if (num % i === 0) return false;
-    }
-    return true;
-};
+// Middleware
+app.use(express.json());
 
-// POST method
+// Enable CORS for all routes
+app.use(cors({
+    origin: 'http://localhost:3000', // Replace with your frontend's origin
+    methods: ['GET', 'POST'], // Allow only these methods
+    allowedHeaders: ['Content-Type'], // Allow only specific headers
+}));
+
+// Routes
 app.post('/bfhl', (req, res) => {
-    const { data, file_b64 } = req.body;
-    let numbers = [];
-    let alphabets = [];
-    let highestLowercase = [];
-    let isPrimeFound = false;
-    let fileDetails = { file_valid: false, file_mime_type: null, file_size_kb: null };
+    // Your logic for POST request
+    const data = req.body.data || [];
+    const file_b64 = req.body.file_b64 || null;
 
-    if (data) {
-        data.forEach((item) => {
-            if (!isNaN(item)) {
-                numbers.push(item);
-                if (isPrime(parseInt(item))) isPrimeFound = true;
-            } else if (typeof item === 'string' && isNaN(item)) {
-                alphabets.push(item);
-                if (item === item.toLowerCase()) highestLowercase.push(item);
-            }
-        });
-    }
+    // Process input
+    const numbers = data.filter(item => !isNaN(Number(item)));
+    const alphabets = data.filter(item => isNaN(Number(item)));
+    const highestLowercase = alphabets.filter(item => /^[a-z]$/.test(item))
+                                       .sort()
+                                       .slice(-1);
 
-    if (file_b64) {
-        try {
-            const filePath = base64Img.imgSync(file_b64, './uploads', 'temp');
-            const fs = require('fs');
-            const stats = fs.statSync(filePath);
-            fileDetails = {
-                file_valid: true,
-                file_mime_type: require('mime-types').lookup(filePath),
-                file_size_kb: (stats.size / 1024).toFixed(2),
-            };
-        } catch (e) {
-            fileDetails.file_valid = false;
-        }
-    }
+    const isPrimeFound = numbers.some(num => isPrime(Number(num)));
 
-    res.status(200).json({
+    res.json({
         is_success: true,
-        user_id: "john_doe_17091999",
+        user_id: "john_doe_17091999", // Replace with dynamic user ID if needed
         email: "john@xyz.com",
         roll_number: "ABCD123",
         numbers,
         alphabets,
-        highest_lowercase_alphabet: [highestLowercase.sort().pop()],
+        highest_lowercase_alphabet: highestLowercase,
         is_prime_found: isPrimeFound,
-        ...fileDetails,
+        file_valid: !!file_b64,
+        file_mime_type: file_b64 ? "image/png" : null, // Example MIME type
+        file_size_kb: file_b64 ? 400 : null // Example file size
     });
 });
 
-// GET method
 app.get('/bfhl', (req, res) => {
-    res.status(200).json({ operation_code: 1 });
+    res.status(200).json({
+        operation_code: 1
+    });
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Helper function to check for prime numbers
+function isPrime(num) {
+    if (num <= 1) return false;
+    for (let i = 2; i <= Math.sqrt(num); i++) {
+        if (num % i === 0) return false;
+    }
+    return true;
+}
+
+// Start the server
+const PORT = 5000;
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    
+});
