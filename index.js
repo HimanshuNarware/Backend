@@ -8,7 +8,7 @@ app.use(express.json());
 
 // Enable CORS for all routes
 app.use(cors({
-    origin: 'http://localhost:3000', // Replace with your frontend's origin
+    origin: 'https://frontend-json.netlify.app/', // Replace with your frontend's origin
     methods: ['GET', 'POST'], // Allow only these methods
     allowedHeaders: ['Content-Type'], // Allow only specific headers
 }));
